@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Moment</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --accent: #6ee7b7;
+      --accent-soft: rgba(110, 231, 183, 0.15);
+      --text: #e8eef5;
+      --muted: #8b9bb4;
+      --border: #2a3648;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Cards / buttons */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .card:hover, .card:focus {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      outline: none;
+    }
+    .card .icon {
+      font-size: 1.5rem;
+      width: 40px;
+      text-align: center;
+    }
+    .card .label {
+      font-weight: 500;
+      font-size: 1.05rem;
+    }
+    .card .desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--accent);
+      color: #0f1419;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn.secondary:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    /* Matching screen */
+    .matching {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    .pulse {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .pulse::before {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      opacity: 0.4;
+      animation: pulseRing 1.8s ease-out infinite;
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .pulse-icon {
+      font-size: 2rem;
+    }
+
+    /* Room */
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .partner {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      border: 2px solid var(--accent);
+    }
+    .partner-name {
+      font-weight: 600;
+    }
+    .partner-status {
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .prompt-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .prompt-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .prompt-text {
+      font-size: 1.15rem;
+      font-weight: 500;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .answer {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      font-size: 0.95rem;
+    }
+    .answer.partner {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .answer .who {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      resize: none;
+      min-height: 80px;
+      margin-bottom: 0.75rem;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .actions .btn {
+      flex: 1;
+    }
+
+    /* Drawing pad */
+    .canvas-wrap {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 200px;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .canvas-tools {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .tool-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .tool-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    /* End screen */
+    .end-message {
+      text-align: center;
+      padding: 2rem 0;
+    }
+    .end-message p {
+      color: var(--muted);
+      margin: 1rem 0 2rem;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 2rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- HOME -->
+    <div id="home" class="screen active">
+      <h1>Shared Moment</h1>
+      <p class="subtitle">A short, real connection with someone who needs it too.</p>
+
+      <div class="card" onclick="selectMood('talk')" tabindex="0">
+        <div class="icon">💬</div>
+        <div>
+          <div class="label">I want to talk</div>
+          <div class="desc">Answer a few questions together</div>
+        </div>
+      </div>
+
+      <div class="card" onclick="selectMood('play')" tabindex="0">
+        <div class="icon">🎮</div>
+        <div>
+          <div class="label">I want to play</div>
+          <div class="desc">Draw something together</div>
+        </div>
+      </div>
+
+      <div class="card" onclick="selectMood('share')" tabindex="0">
+        <div class="icon">🌱</div>
+        <div>
+          <div class="label">I want to share</div>
+          <div class="desc">Something small that matters today</div>
+        </div>
+      </div>
+
+      <div class="card" onclick="selectMood('alone')" tabindex="0">
+        <div class="icon">🌙</div>
+        <div>
+          <div class="label">I just want to feel less alone</div>
+          <div class="desc">Quiet company is enough</div>
+        </div>
+      </div>
+
+      <p class="footer-note">Prototype · No accounts · No tracking</p>
+    </div>
+
+    <!-- MATCHING -->
+    <div id="matching" class="screen">
+      <div class="matching">
+        <div class="pulse">
+          <span class="pulse-icon">✨</span>
+        </div>
+        <h1>Finding someone…</h1>
+        <p class="subtitle" id="matching-text">Looking for a person who chose the same thing.</p>
+      </div>
+    </div>
+
+    <!-- ROOM: TALK / SHARE / ALONE -->
+    <div id="room-talk" class="screen">
+      <div class="room-header">
+        <div class="partner">
+          <div class="avatar" id="avatar-talk">🌿</div>
+          <div>
+            <div class="partner-name" id="partner-name-talk">Alex</div>
+            <div class="partner-status">connected</div>
+          </div>
+        </div>
+        <div class="timer" id="timer-talk">10:00</div>
+      </div>
+
+      <div class="prompt-box">
+        <div class="prompt-label">Shared question</div>
+        <div class="prompt-text" id="current-prompt">What made you smile this week, even a little?</div>
+      </div>
+
+      <div class="answers" id="answers">
+        <!-- filled by JS -->
+      </div>
+
+      <textarea id="my-answer" placeholder="Type your answer…" maxlength="280"></textarea>
+      <div class="actions">
+        <button class="btn" onclick="submitAnswer()">Share</button>
+        <button class="btn secondary" onclick="nextPrompt()">Next question</button>
+      </div>
+    </div>
+
+    <!-- ROOM: PLAY (drawing) -->
+    <div id="room-play" class="screen">
+      <div class="room-header">
+        <div class="partner">
+          <div class="avatar" id="avatar-play">🎨</div>
+          <div>
+            <div class="partner-name" id="partner-name-play">Sam</div>
+            <div class="partner-status">drawing with you</div>
+          </div>
+        </div>
+        <div class="timer" id="timer-play">10:00</div>
+      </div>
+
+      <p class="subtitle" style="margin-bottom: 1rem;">Draw something together. It doesn’t have to be good.</p>
+
+      <div class="canvas-wrap">
+        <canvas id="draw-canvas" width="440" height="200"></canvas>
+      </div>
+      <div class="canvas-tools">
+        <button class="tool-btn active" onclick="setColor('#0f1419')">Black</button>
+        <button class="tool-btn" onclick="setColor('#6ee7b7')">Green</button>
+        <button class="tool-btn" onclick="setColor('#f87171')">Red</button>
+        <button class="tool-btn" onclick="clearCanvas()">Clear</button>
+      </div>
+
+      <button class="btn secondary" onclick="endSession()">End moment</button>
+    </div>
+
+    <!-- END -->
+    <div id="end" class="screen">
+      <div class="end-message">
+        <h1>Thank you for showing up.</h1>
+        <p>Even a few minutes of real presence matters.<br>You made someone’s day a little lighter.</p>
+        <button class="btn" onclick="goHome()">Start another moment</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Data ----------
+    const partners = [
+      { name: "Alex", emoji: "🌿" },
+      { name: "Sam", emoji: "🌊" },
+      { name: "Jordan", emoji: "☀️" },
+      { name: "Riley", emoji: "🍃" },
+      { name: "Casey", emoji: "🌙" },
+      { name: "Morgan", emoji: "✨" }
+    ];
+
+    const prompts = {
+      talk: [
+        "What made you smile this week, even a little?",
+        "What’s one small thing you’re looking forward to?",
+        "If you could teleport somewhere for one hour, where would you go?",
+        "What’s a song that feels like home to you?",
+        "What’s something kind someone did for you recently?"
+      ],
+      share: [
+        "What’s one thing that felt heavy today?",
+        "What’s something you’re quietly proud of?",
+        "Share a tiny win from this week.",
+        "What’s a place (real or imaginary) that feels safe to you?"
+      ],
+      alone: [
+        "You don’t have to say much. Just knowing someone else is here is enough.",
+        "What’s the weather like where you are right now?",
+        "If today had a color, what would it be?",
+        "What’s one thing that usually helps you feel a bit calmer?"
+      ]
+    };
+
+    const partnerReplies = {
+      talk: [
+        "A stranger held the door and smiled. Small, but it stuck with me.",
+        "I’m looking forward to making coffee tomorrow morning without rushing.",
+        "Probably a quiet beach at sunrise. Just the sound of waves.",
+        "Anything by Norah Jones feels like home to me.",
+        "My neighbor brought over soup when I was sick last month."
+      ],
+      share: [
+        "Work felt overwhelming, but I’m trying to let it go for tonight.",
+        "I finally finished a book I’ve been reading for weeks.",
+        "I went for a short walk and the air smelled like rain.",
+        "My old reading chair by the window."
+      ],
+      alone: [
+        "I’m here too. No pressure to talk if you don’t want to.",
+        "It’s cloudy and a bit cold. Perfect for staying in.",
+        "Soft blue-grey, like early evening.",
+        "Putting my phone down and just breathing for a minute."
+      ]
+    };
+
+    let currentMood = null;
+    let currentPartner = null;
+    let promptIndex = 0;
+    let timerInterval = null;
+    let secondsLeft = 600; // 10 minutes
+    let answered = false;
+
+    // ---------- Navigation ----------
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function selectMood(mood) {
+      currentMood = mood;
+      showScreen("matching");
+      const texts = {
+        talk: "Looking for someone who also wants to talk…",
+        play: "Looking for someone who wants to draw together…",
+        share: "Looking for someone ready to share something real…",
+        alone: "Looking for quiet company…"
+      };
+      document.getElementById("matching-text").textContent = texts[mood];
+
+      // Simulate matching delay
+      setTimeout(() => {
+        currentPartner = partners[Math.floor(Math.random() * partners.length)];
+        startSession();
+      }, 2200 + Math.random() * 1500);
+    }
+
+    function startSession() {
+      secondsLeft = 600;
+      promptIndex = 0;
+      answered = false;
+
+      if (currentMood === "play") {
+        document.getElementById("partner-name-play").textContent = currentPartner.name;
+        document.getElementById("avatar-play").textContent = currentPartner.emoji;
+        showScreen("room-play");
+        initCanvas();
+        startTimer("timer-play");
+      } else {
+        document.getElementById("partner-name-talk").textContent = currentPartner.name;
+        document.getElementById("avatar-talk").textContent = currentPartner.emoji;
+        document.getElementById("answers").innerHTML = "";
+        document.getElementById("my-answer").value = "";
+        showPrompt();
+        showScreen("room-talk");
+        startTimer("timer-talk");
+      }
+    }
+
+    function startTimer(elId) {
+      clearInterval(timerInterval);
+      updateTimerDisplay(elId);
+      timerInterval = setInterval(() => {
+        secondsLeft--;
+        updateTimerDisplay(elId);
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          endSession();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(elId) {
+      const m = Math.floor(secondsLeft / 60);
+      const s = secondsLeft % 60;
+      document.getElementById(elId).textContent =
+        `${m}:${s.toString().padStart(2, "0")}`;
+    }
+
+    function showPrompt() {
+      const list = prompts[currentMood] || prompts.talk;
+      const text = list[promptIndex % list.length];
+      document.getElementById("current-prompt").textContent = text;
+      answered = false;
+      document.getElementById("my-answer").value = "";
+      document.getElementById("answers").innerHTML = "";
+    }
+
+    function submitAnswer() {
+      const text = document.getElementById("my-answer").value.trim();
+      if (!text || answered) return;
+      answered = true;
+
+      const answersEl = document.getElementById("answers");
+      answersEl.innerHTML = `
+        <div class="answer">
+          <div class="who">You</div>
+          ${escapeHtml(text)}
+        </div>
+      `;
+
+      // Clear the input so it doesn't look like a duplicate answer
+      document.getElementById("my-answer").value = "";
+
+      // Simulate partner reply after a short delay
+      setTimeout(() => {
+        const replies = partnerReplies[currentMood] || partnerReplies.talk;
+        const reply = replies[promptIndex % replies.length];
+        answersEl.innerHTML += `
+          <div class="answer partner">
+            <div class="who">${currentPartner.name}</div>
+            ${escapeHtml(reply)}
+          </div>
+        `;
+      }, 1200 + Math.random() * 1000);
+    }
+
+    function nextPrompt() {
+      promptIndex++;
+      showPrompt();
+    }
+
+    function endSession() {
+      clearInterval(timerInterval);
+      showScreen("end");
+    }
+
+    function goHome() {
+      clearInterval(timerInterval);
+      showScreen("home");
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // ---------- Drawing canvas ----------
+    let canvas, ctx, drawing = false, currentColor = "#0f1419";
+
+    function initCanvas() {
+      canvas = document.getElementById("draw-canvas");
+      ctx = canvas.getContext("2d");
+      // Fix for high-DPI
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = rect.height * 2;
+      ctx.scale(2, 2);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      canvas.onmousedown = startDraw;
+      canvas.onmousemove = draw;
+      canvas.onmouseup = stopDraw;
+      canvas.onmouseleave = stopDraw;
+      canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
+      canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
+      canvas.ontouchend = stopDraw;
+    }
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
+    function startDraw(e) {
+      drawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDraw() {
+      drawing = false;
+    }
+
+    function setColor(color) {
+      currentColor = color;
+      ctx.strokeStyle = color;
+      document.querySelectorAll(".tool-btn").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Keyboard support for cards
+    document.querySelectorAll(".card").forEach(card => {
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
